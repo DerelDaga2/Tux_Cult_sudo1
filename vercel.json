@@ -1,0 +1,13 @@
+{
+    "functions": {
+        "backend/outlook-ticket-bot/api/*.js": {
+            "runtime": "@vercel/node"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/backend/outlook-ticket-bot/api/$1"
+        }
+    ]
+}
