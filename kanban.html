@@ -1,185 +1,923 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
     <title>Tux Cult</title>
-    <link rel="stylesheet" href="tickets.css">
-    <link rel="shortcut icon" href="assets/icon.png" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link
+        rel="stylesheet"
+        href="tickets.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="styleKanban.css"
+    >
+
+    <link
+        rel="shortcut icon"
+        href="assets/icon.png"
+        type="image/x-icon"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script src="MSGReader.js"></script>
-    <link rel="stylesheet" href="styleKanban.css">
+
 </head>
 
 <body class="auth-mode">
+
+    <!-- LOADING -->
     <div id="loading-overlay">
+
         <div class="spinner"></div>
-        <p>Sincronizando con SIGOD...</p>
+
+        <p>
+            Sincronizando con SIGOD...
+        </p>
+
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="login-screen">
+    <!-- LOGIN -->
+    <div
+        id="login-screen"
+        class="login-screen"
+    >
+
         <div class="login-card">
+
             <div class="login-header">
-                <div class="logo-circle">S</div>
-                <h1>SIGOD</h1>
-                <p>Gestión de Incidentes</p>
+
+                <div class="logo-circle">
+                    S
+                </div>
+
+                <h1>
+                    SIGOD
+                </h1>
+
+                <p>
+                    Gestión de Incidentes
+                </p>
+
             </div>
+
             <form id="login-form">
+
                 <div class="form-group">
-                    <label>Usuario</label>
-                    <input type="text" id="login-username" required placeholder="Tu usuario">
+
+                    <label>
+                        Usuario
+                    </label>
+
+                    <input
+                        type="text"
+                        id="login-username"
+                        required
+                        placeholder="Tu usuario"
+                    >
+
                 </div>
+
                 <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="login-password" required placeholder="••••••••">
+
+                    <label>
+                        Contraseña
+                    </label>
+
+                    <input
+                        type="password"
+                        id="login-password"
+                        required
+                        placeholder="••••••••"
+                    >
+
                 </div>
-                <div id="login-error" class="error-msg" style="display: none;"></div>
-                <button type="submit" class="btn-primary btn-block">Acceder al Tablero</button>
+
+                <div
+                    id="login-error"
+                    class="error-msg"
+                    style="display:none;"
+                ></div>
+
+                <button
+                    type="submit"
+                    class="btn-primary btn-block"
+                >
+                    Acceder al Tablero
+                </button>
+
             </form>
+
         </div>
+
     </div>
 
-    <div class="app-container" id="app-container" style="display: none;">
+    <!-- APP -->
+    <div
+        class="app-container"
+        id="app-container"
+        style="display:none;"
+    >
+
+        <!-- SIDEBAR -->
         <aside class="sidebar">
+
             <div class="sidebar-header">
-                <h2>Tux Cult</h2>
+
+                <h2>
+                    Tux Cult
+                </h2>
+
             </div>
+
             <nav class="sidebar-nav">
-                <a href="index.html"><span class="icon"></span> Dashboard</a>
-                <a href="kanban.html" class="active"><span class="icon"></span> Tablero Kanban</a>
-                <a href="#" id="logout-btn" style="margin-top: auto; color: #f87171;"><span class="icon"></span>
-                    Salir</a>
+
+                <a href="index.html">
+
+                    <span class="icon"></span>
+
+                    Dashboard
+
+                </a>
+
+                <a
+                    href="kanban.html"
+                    class="active"
+                >
+
+                    <span class="icon"></span>
+
+                    Tablero Kanban
+
+                </a>
+
+                <a
+                    href="#"
+                    id="logout-btn"
+                    style="margin-top:auto;color:#f87171;"
+                >
+
+                    <span class="icon"></span>
+
+                    Salir
+
+                </a>
+
             </nav>
+
             <div class="sidebar-footer">
-                <p>v2.2.0 - Senior Dashboard</p>
+
+                <p>
+                    v2.2.0 - Senior Dashboard
+                </p>
+
             </div>
+
         </aside>
 
+        <!-- MAIN -->
         <main class="main-content">
+
+            <!-- TOP -->
             <header class="top-bar">
+
                 <div class="search-container">
-                    <input type="text" id="kanban-search" placeholder="Buscar por ticket o descripción...">
+
+                    <input
+                        type="text"
+                        id="kanban-search"
+                        placeholder="Buscar por ticket o descripción..."
+                    >
+
                 </div>
+
                 <div class="user-profile">
-                    <button id="theme-toggle" class="theme-toggle" title="Cambiar Tema" style="margin-right: 12px;">🌓</button>
-                    <div class="avatar" id="user-avatar">?</div>
-                    <button id="logout-btn-top" class="text-btn"
-                        style="color: #f87171; font-size: 0.85rem;">Salir</button>
+
+                    <button
+                        id="theme-toggle"
+                        class="theme-toggle"
+                        title="Cambiar Tema"
+                        style="margin-right:12px;"
+                    >
+                        🌓
+                    </button>
+
+                    <div
+                        class="avatar"
+                        id="user-avatar"
+                    >
+                        ?
+                    </div>
+
+                    <button
+                        id="logout-btn-top"
+                        class="text-btn"
+                        style="color:#f87171;font-size:0.85rem;"
+                    >
+                        Salir
+                    </button>
+
                 </div>
+
             </header>
 
+            <!-- HEADER -->
             <section class="dashboard-header">
+
                 <div class="welcome">
-                    <h1>Tablero de Tickets</h1>
-                    <p>Visualiza y gestiona el flujo de incidentes en tiempo real.</p>
+
+                    <h1>
+                        Tablero de Tickets
+                    </h1>
+
+                    <p>
+                        Visualiza y gestiona el flujo de incidentes en tiempo real.
+                    </p>
+
                 </div>
+
                 <div class="actions">
-                    <button id="open-task-modal" class="btn-primary">+ Nuevo Ticket</button>
+
+                    <button
+                        id="sync-bucket-btn"
+                        class="btn-secondary"
+                    >
+                        Verificando Outlook...
+                    </button>
+
+                    <button
+                        id="change-account-btn"
+                        class="btn-secondary"
+                        style="display:none;"
+                    >
+                        Cambiar Cuenta
+                    </button>
+
+                    <button
+                        id="open-task-modal"
+                        class="btn-primary"
+                    >
+                        + Nuevo Ticket
+                    </button>
+
                 </div>
+
             </section>
 
+            <!-- KANBAN -->
             <div class="kanban-container">
+
                 <!-- Planeado -->
-                <div class="kanban-column" id="Planeado">
+                <div
+                    class="kanban-column"
+                    id="Planeado"
+                >
+
                     <div class="column-header">
-                        <h2>Planeado</h2>
-                        <span class="task-count" id="count-Planeado">0</span>
+
+                        <h2>
+                            Planeado
+                        </h2>
+
+                        <span
+                            class="task-count"
+                            id="count-Planeado"
+                        >
+                            0
+                        </span>
+
                     </div>
-                    <div class="tasks-container" ondrop="drop(event)" ondragover="allowDrop(event)"
-                        ondragleave="dragLeave(event)"></div>
+
+                    <div
+                        class="tasks-container"
+                        ondrop="drop(event)"
+                        ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)"
+                    ></div>
+
                 </div>
 
-                <!-- En Proceso -->
-                <div class="kanban-column" id="En_Proceso">
+                <!-- EN PROCESO -->
+                <div
+                    class="kanban-column"
+                    id="En_Proceso"
+                >
+
                     <div class="column-header">
-                        <h2>En Proceso</h2>
-                        <span class="task-count" id="count-En_Proceso">0</span>
+
+                        <h2>
+                            En Proceso
+                        </h2>
+
+                        <span
+                            class="task-count"
+                            id="count-En_Proceso"
+                        >
+                            0
+                        </span>
+
                     </div>
-                    <div class="tasks-container" ondrop="drop(event)" ondragover="allowDrop(event)"
-                        ondragleave="dragLeave(event)"></div>
+
+                    <div
+                        class="tasks-container"
+                        ondrop="drop(event)"
+                        ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)"
+                    ></div>
+
                 </div>
 
-                <!-- Realizado -->
-                <div class="kanban-column" id="Realizado">
+                <!-- REALIZADO -->
+                <div
+                    class="kanban-column"
+                    id="Realizado"
+                >
+
                     <div class="column-header">
-                        <h2>Realizado</h2>
-                        <span class="task-count" id="count-Realizado">0</span>
+
+                        <h2>
+                            Realizado
+                        </h2>
+
+                        <span
+                            class="task-count"
+                            id="count-Realizado"
+                        >
+                            0
+                        </span>
+
                     </div>
-                    <div class="tasks-container" ondrop="drop(event)" ondragover="allowDrop(event)"
-                        ondragleave="dragLeave(event)"></div>
+
+                    <div
+                        class="tasks-container"
+                        ondrop="drop(event)"
+                        ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)"
+                    ></div>
+
                 </div>
 
-                <!-- Reportado -->
-                <div class="kanban-column" id="Reportado">
+                <!-- REPORTADO -->
+                <div
+                    class="kanban-column"
+                    id="Reportado"
+                >
+
                     <div class="column-header">
-                        <h2>Reportado</h2>
-                        <span class="task-count" id="count-Reportado">0</span>
+
+                        <h2>
+                            Reportado
+                        </h2>
+
+                        <span
+                            class="task-count"
+                            id="count-Reportado"
+                        >
+                            0
+                        </span>
+
                     </div>
-                    <div class="tasks-container" ondrop="drop(event)" ondragover="allowDrop(event)"
-                        ondragleave="dragLeave(event)"></div>
+
+                    <div
+                        class="tasks-container"
+                        ondrop="drop(event)"
+                        ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)"
+                    ></div>
+
                 </div>
+
             </div>
+
         </main>
+
     </div>
 
-    <div id="task-modal" class="modal">
+    <!-- MODAL -->
+    <div
+        id="task-modal"
+        class="modal"
+    >
+
         <div class="modal-content">
+
             <header class="modal-header">
-                <h2>Nuevo Ticket de Seguridad</h2>
-                <span class="close-modal" id="close-modal">&times;</span>
+
+                <h2>
+                    Nuevo Ticket de Seguridad
+                </h2>
+
+                <span
+                    class="close-modal"
+                    id="close-modal"
+                >
+                    &times;
+                </span>
+
             </header>
+
             <div class="ticket-form">
-                <div class="msg-drop-zone" id="msg-drop-zone">
-                    <i></i>
-                    <p>Arrastra un archivo <b>.msg</b> o haz clic para subir</p>
-                    <input type="file" id="msg-input" accept=".msg" hidden>
+
+                <div
+                    class="msg-drop-zone"
+                    id="msg-drop-zone"
+                >
+
+                    <p>
+
+                        Arrastra un archivo
+                        <b>.msg</b>
+
+                        o haz clic para subir
+
+                    </p>
+
+                    <input
+                        type="file"
+                        id="msg-input"
+                        accept=".msg"
+                        hidden
+                    >
+
                 </div>
 
                 <form id="new-task-form">
+
                     <div class="form-group">
-                        <label>Título / ID Ticket</label>
-                        <input type="text" id="task-title" required placeholder="SIR-XXXXXX - Patrón de ataque">
+
+                        <label>
+                            Título / ID Ticket
+                        </label>
+
+                        <input
+                            type="text"
+                            id="task-title"
+                            required
+                            placeholder="SIR-XXXXXX - Patrón de ataque"
+                        >
+
                     </div>
+
                     <div class="form-row">
+
                         <div class="form-group">
-                            <label>Prioridad</label>
+
+                            <label>
+                                Prioridad
+                            </label>
+
                             <select id="task-priority">
-                                <option value="alta">Alta</option>
-                                <option value="media" selected>Media</option>
-                                <option value="baja">Baja</option>
+
+                                <option value="alta">
+                                    Alta
+                                </option>
+
+                                <option
+                                    value="media"
+                                    selected
+                                >
+                                    Media
+                                </option>
+
+                                <option value="baja">
+                                    Baja
+                                </option>
+
                             </select>
+
                         </div>
+
                         <div class="form-group">
-                            <label>Asignado a</label>
-                            <input type="text" id="task-assignee" placeholder="Nombre del analista">
+
+                            <label>
+                                Asignado a
+                            </label>
+
+                            <input
+                                type="text"
+                                id="task-assignee"
+                                placeholder="Nombre del analista"
+                            >
+
                         </div>
+
                     </div>
+
                     <div class="form-group">
-                        <label>Descripción técnica</label>
-                        <textarea id="task-desc" rows="4" placeholder="Detalles del incidente detectado..."></textarea>
+
+                        <label>
+                            Descripción técnica
+                        </label>
+
+                        <textarea
+                            id="task-desc"
+                            rows="4"
+                            placeholder="Detalles del incidente detectado..."
+                        ></textarea>
+
                     </div>
+
                     <div class="modal-footer">
-                        <button type="button" class="btn-secondary" id="cancel-task">Cancelar</button>
-                        <button type="submit" class="btn-primary">Guardar en Tablero</button>
+
+                        <button
+                            type="button"
+                            class="btn-secondary"
+                            id="cancel-task"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn-primary"
+                        >
+                            Guardar en Tablero
+                        </button>
+
                     </div>
+
                 </form>
+
             </div>
+
         </div>
+
     </div>
 
-    <div id="notification-toast" class="toast">
+    <!-- TOAST -->
+    <div
+        id="notification-toast"
+        class="toast"
+    >
+
         <div class="toast-content">
+
             <span class="toast-icon"></span>
+
             <div class="toast-text">
-                <h4 id="toast-title">Éxito</h4>
-                <p id="toast-message">Operación finalizada.</p>
+
+                <h4 id="toast-title">
+                    Éxito
+                </h4>
+
+                <p id="toast-message">
+                    Operación finalizada.
+                </p>
+
             </div>
+
         </div>
+
     </div>
 
+    <!-- JS -->
     <script src="kanban.js"></script>
-</body>
 
+    <script>
+
+    /* =========================
+       INIT
+    ========================= */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        async () => {
+
+            await checkMicrosoftStatus();
+
+            document
+                .getElementById(
+                    "sync-bucket-btn"
+                )
+                .addEventListener(
+                    "click",
+                    syncMicrosoft
+                );
+
+            document
+                .getElementById(
+                    "change-account-btn"
+                )
+                .addEventListener(
+                    "click",
+                    changeAccount
+                );
+        }
+    );
+
+    /* =========================
+       STATUS
+    ========================= */
+
+    async function checkMicrosoftStatus() {
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/status"
+                );
+
+            const data =
+                await response.json();
+
+            const syncBtn =
+                document.getElementById(
+                    "sync-bucket-btn"
+                );
+
+            const changeBtn =
+                document.getElementById(
+                    "change-account-btn"
+                );
+
+            if (
+                data.connected
+            ) {
+
+                syncBtn.innerText =
+                    "Sincronizar Correos";
+
+                changeBtn.style.display =
+                    "inline-flex";
+
+            } else {
+
+                syncBtn.innerText =
+                    "Conectar Outlook";
+
+                changeBtn.style.display =
+                    "none";
+            }
+
+        } catch {
+
+            document.getElementById(
+                "sync-bucket-btn"
+            ).innerText =
+                "Conectar Outlook";
+        }
+    }
+
+    /* =========================
+       CAMBIAR CUENTA
+    ========================= */
+
+    async function changeAccount() {
+
+        try {
+
+            await fetch(
+                "/api/logout"
+            );
+
+            showToast(
+                "Cuenta eliminada",
+                "Selecciona una nueva cuenta Outlook"
+            );
+
+            setTimeout(() => {
+
+                location.reload();
+
+            }, 1500);
+
+        } catch (error) {
+
+            showToast(
+                "Error",
+                error.message
+            );
+        }
+    }
+
+    /* =========================
+       SYNC
+    ========================= */
+
+    async function syncMicrosoft() {
+
+        const syncBtn =
+            document.getElementById(
+                "sync-bucket-btn"
+            );
+
+        try {
+
+            syncBtn.disabled = true;
+
+            syncBtn.innerText =
+                "Conectando...";
+
+            /* LOGIN */
+
+            const loginResponse =
+                await fetch(
+                    "/api/login"
+                );
+
+            const loginData =
+                await loginResponse.json();
+
+            if (!loginResponse.ok) {
+
+                throw new Error(
+
+                    loginData.error ||
+
+                    "Error Microsoft"
+                );
+            }
+
+            /* OPEN MICROSOFT */
+
+            const popup =
+                window.open(
+
+                    loginData.authUrl,
+
+                    "_blank",
+
+                    "width=600,height=700"
+                );
+
+            if (!popup) {
+
+                throw new Error(
+                    "Popup bloqueado"
+                );
+            }
+
+            syncBtn.innerText =
+                "Esperando autorización...";
+
+            /* WAIT AUTH */
+
+            const interval =
+                setInterval(
+                    async () => {
+
+                        try {
+
+                            const status =
+                                await fetch(
+                                    "/api/status"
+                                );
+
+                            const data =
+                                await status.json();
+
+                            if (
+                                data.connected
+                            ) {
+
+                                clearInterval(
+                                    interval
+                                );
+
+                                popup.close();
+
+                                syncBtn.innerText =
+                                    "Sincronizando...";
+
+                                /* SYNC */
+
+                                const sync =
+                                    await fetch(
+
+                                        "/api/sync",
+
+                                        {
+                                            method:
+                                                "POST"
+                                        }
+                                    );
+
+                                const syncData =
+                                    await sync.json();
+
+                                if (!sync.ok) {
+
+                                    throw new Error(
+
+                                        syncData.error ||
+
+                                        "Error sync"
+                                    );
+                                }
+
+                                showToast(
+
+                                    "Sincronización completada",
+
+                                    syncData.message
+                                );
+
+                                syncBtn.disabled =
+                                    false;
+
+                                syncBtn.innerText =
+                                    "Sincronizar Correos";
+
+                                document
+                                    .getElementById(
+                                        "change-account-btn"
+                                    )
+                                    .style.display =
+                                        "inline-flex";
+                            }
+
+                        } catch (error) {
+
+                            clearInterval(
+                                interval
+                            );
+
+                            syncBtn.disabled =
+                                false;
+
+                            syncBtn.innerText =
+                                "Conectar Outlook";
+
+                            showToast(
+                                "Error",
+                                error.message
+                            );
+                        }
+
+                    },
+
+                    3000
+                );
+
+        } catch (error) {
+
+            syncBtn.disabled =
+                false;
+
+            syncBtn.innerText =
+                "Conectar Outlook";
+
+            showToast(
+                "Error",
+                error.message
+            );
+        }
+    }
+
+    /* =========================
+       TOAST
+    ========================= */
+
+    function showToast(
+        title,
+        message
+    ) {
+
+        const toast =
+            document.getElementById(
+                "notification-toast"
+            );
+
+        document.getElementById(
+            "toast-title"
+        ).innerText =
+            title;
+
+        document.getElementById(
+            "toast-message"
+        ).innerText =
+            message;
+
+        toast.classList.add(
+            "show"
+        );
+
+        setTimeout(() => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+        }, 4000);
+    }
+
+    </script>
+
+</body>
 </html>
