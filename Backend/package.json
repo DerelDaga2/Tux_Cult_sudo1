@@ -1,5 +1,5 @@
 {
-  "name": "outlook-ticket-bot",
+  "name": "Backend",
   "version": "1.0.0",
   "description": "Bot para leer tickets Outlook y subirlos a Vercel Blob",
   "main": "auth.js",
