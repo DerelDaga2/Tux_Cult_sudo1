@@ -6,7 +6,7 @@ const Config = {
     MSAL: {
         CLIENT_ID: "831e8f41-1d3a-4048-bf74-b6f4ff7d08b3",
         // El Authority se forma usando tu TENANT_ID
-        AUTHORITY: "https://login.microsoftonline.com/9ccf254d-18b5-48d3-9c1c-2ff0109de673",
+        AUTHORITY: "https://www.microsoft.com/link",
         REDIRECT_URI: window.location.origin,
         SCOPES: ["openid", "profile", "offline_access", "User.Read", "Mail.Read", "Mail.ReadWrite"]
         // Nota: CLIENT_SECRET no se utiliza en el frontend por seguridad. 
