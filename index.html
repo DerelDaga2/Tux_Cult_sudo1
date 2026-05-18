@@ -82,6 +82,7 @@
                     <p>Bienvenido al panel central de reportes de seguridad.</p>
                 </div>
                 <div class="actions">
+                    <button id="auth-outlook-btn" class="btn-secondary" style="background-color:#0078d4; color:white; border-color:#0078d4;">Conectar Outlook</button>
                     <button id="sync-bucket-btn" class="btn-secondary">Sincronizar Bucket</button>
                     <button id="export-csv-btn" class="btn-secondary">Exportar CSV</button>
                     <button id="open-modal-btn" class="btn-primary">+ Nuevo Ticket</button>
@@ -263,59 +264,41 @@
 
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- MSAL Browser CDN -->
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+    
+    <!-- App Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/ticketClassifier.js"></script>
+    <script src="js/authOutlook.js"></script>
+    <script src="js/outlookSync.js"></script>
+    
 <script src="MSGReader.js"></script>
 <script src="tickets.js"></script>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-    const syncBtn = document.getElementById("sync-bucket-btn");
-
-    syncBtn.addEventListener("click", async () => {
-
-        syncBtn.disabled = true;
-        syncBtn.innerText = "Sincronizando...";
-
-        try {
-
-            const response = await fetch("/api/sync", {
-                method: "POST"
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-
-                showToast(
-                    "Sincronización completada",
-                    data.message || "Bucket sincronizado correctamente"
-                );
-
-            } else {
-
-                showToast(
-                    "Error",
-                    data.error || "Error al sincronizar"
-                );
-
-            }
-
-        } catch (error) {
-
-            showToast(
-                "Error",
-                error.message
-            );
-
-        } finally {
-
-            syncBtn.disabled = false;
-            syncBtn.innerText = "Sincronizar Bucket";
-
+    // Inicializar MSAL Auth
+    await AuthOutlook.init();
+    
+    const authBtn = document.getElementById("auth-outlook-btn");
+    if (authBtn) {
+        if (AuthOutlook.isConnected()) {
+            authBtn.style.display = 'none';
         }
+        
+        authBtn.addEventListener("click", async () => {
+            const success = await AuthOutlook.login();
+            if (success) {
+                authBtn.style.display = 'none';
+                showToast("Conexión Exitosa", "Se ha conectado con Microsoft Outlook.");
+            }
+        });
+    }
 
-    });
+    // El botón Sincronizar Bucket ahora es manejado íntegramente por tickets.js
 
     function showToast(title, message) {
 

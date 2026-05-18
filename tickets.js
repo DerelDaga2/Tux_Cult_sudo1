@@ -653,13 +653,29 @@ const TicketApp = (() => {
             // Sync Bucket
             if (DOM.syncBucketBtn) {
                 DOM.syncBucketBtn.onclick = async () => {
+                    if (!AuthOutlook.isConnected()) {
+                        Notify.show("Atención", "Por favor conecta tu cuenta de Outlook primero.");
+                        return;
+                    }
+
                     DOM.syncBucketBtn.disabled = true;
                     DOM.syncBucketBtn.textContent = 'Sincronizando...';
-                    await Logic.syncTicketsFromBucket();
-                    state.tickets = await Storage.fetchTickets();
-                    UI.render();
-                    DOM.syncBucketBtn.disabled = false;
-                    DOM.syncBucketBtn.textContent = 'Sincronizar Bucket';
+                    
+                    try {
+                        // 1. Obtener correos de Outlook y subirlos a Supabase Storage
+                        await OutlookSync.syncMails((msg) => Notify.show("Progreso", msg));
+                        
+                        // 2. Procesar los archivos subidos al bucket hacia la tabla de tickets
+                        await Logic.syncTicketsFromBucket();
+                        
+                        state.tickets = await Storage.fetchTickets();
+                        UI.render();
+                    } catch (error) {
+                        Notify.show("Error", error.message || "Error durante la sincronización");
+                    } finally {
+                        DOM.syncBucketBtn.disabled = false;
+                        DOM.syncBucketBtn.textContent = 'Sincronizar Bucket';
+                    }
                 };
             }
 

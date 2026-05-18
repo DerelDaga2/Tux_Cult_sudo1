@@ -1,0 +1,129 @@
+ESTADO DE LA ARQUITECTURA Y FUNCIONAMIENTO DEL PROYECTO: SIGOD (Tux Cult)
+========================================================================
+
+Este documento detalla de manera exhaustiva el estado actual del proyecto SIGOD (Sistema de Gestión de Tickets) / Tux Cult, explicando detalladamente qué hace la aplicación, qué tecnologías utiliza, cómo interactúan sus componentes frontend y backend, y cuál es la infraestructura de datos subyacente.
+
+------------------------------------------------------------------------
+1. RESUMEN EJECUTIVO
+------------------------------------------------------------------------
+SIGOD / Tux Cult es un sistema híbrido (PWA y Backend Automation) de Gestión de Incidentes de Ciberseguridad diseñado para equipos SOC (Security Operations Center). Su objetivo principal es recibir reportes de incidentes, catalogarlos bajo identificadores de seguridad (como incidentes SIR), y gestionar su ciclo de vida mediante un panel de control avanzado y un tablero interactivo Kanban.
+
+El sistema destaca por su integración automatizada con buzones de correo de Microsoft Outlook, su capacidad de analizar archivos locales de correo en formato .msg, y su base de datos sincronizada en tiempo real mediante Supabase.
+
+------------------------------------------------------------------------
+2. ESTADO ACTUAL DEL PROYECTO
+------------------------------------------------------------------------
+El proyecto está en un estado altamente funcional, maduro y modular:
+* Un backend basado en Node.js que realiza la autenticación MSAL y el escaneo automático de buzones mediante Microsoft Graph.
+* Una API de sincronización desplegable en Vercel con ejecuciones cron programadas.
+* Un frontend reactivo de alto rendimiento implementado en Vanilla Javascript bajo un patrón modular robusto.
+* Una infraestructura basada en la nube que gestiona la base de datos relacional y el almacenamiento de adjuntos en Supabase.
+
+------------------------------------------------------------------------
+3. FUNCIONALIDADES CORE (¿QUÉ HACE?)
+------------------------------------------------------------------------
+
+A. PANEL DE CONTROL DE TICKETS (DASHBOARD)
+Ubicado en index.html y manejado por tickets.js, provee la interfaz principal de administración:
+* Métricas en Tiempo Real: Tarjetas con contadores dinámicos que muestran tickets Abiertos, En Proceso y Finalizados.
+* Filtrado Avanzado: Permite buscar incidentes por ID interno, número de ticket (SIR), rango de fechas de creación, patrón de ataque, origen/destino (IP o dominio) e incluso búsqueda global de texto completo.
+* Exportación de Reportes: Exportación instantánea del listado de tickets filtrados en formato CSV para auditorías de seguridad.
+* Gestión CRUD completa: Creación, edición, visualización y borrado de tickets, incluyendo la capacidad de subir imágenes o archivos adjuntos.
+
+B. TABLERO KANBAN INTERACTIVO
+Ubicado en kanban.html y manejado por kanban.js, optimiza la operación del equipo técnico:
+* Gestión por Columnas: Cuatro estados de flujo técnico: Planeado, En Proceso, Realizado y Reportado.
+* Drag-and-Drop Nativo: Permite arrastrar y soltar las tarjetas de incidentes entre columnas. El estado se actualiza instantáneamente en Supabase.
+* Logs de Auditoría: Cada vez que un ticket se crea o cambia de estado, se registra automáticamente una entrada de auditoría en la tabla activity_logs, identificando qué usuario realizó la acción, el tipo de movimiento y la fecha exacta.
+
+C. INTEGRACIÓN CON MICROSOFT OUTLOOK Y PROCESAMIENTO DE EMAILS .MSG/.EML
+* Lectura de Correos por API: El bot backend lee los correos de la bandeja de entrada de Outlook mediante Microsoft Graph API.
+* Detección Inteligente de Incidentes: Filtra los correos usando expresiones regulares (/SIR\d{7}/i) o evaluando si contienen al menos dos palabras clave de seguridad (ej. sql injection, active scanning, siem, waf, mitre attack).
+* Clasificador de Severidad: Clasifica automáticamente el nivel de severidad del ticket en HIGH, MEDIUM o LOW según los patrones encontrados en el asunto y cuerpo del mensaje.
+* Sincronización Automatizada (Cron): A través de /api/sync ejecutándose cada 5 minutos mediante Vercel Crons, descarga los correos de Outlook y los almacena en un bucket de Supabase como archivos .msg, evitando duplicados.
+* Extracción Cliente-Servidor de MSG: Permite arrastrar un archivo .msg en el navegador (tanto en el Dashboard como en el Kanban) para que sea analizado de inmediato en el cliente mediante MSGReader.js. Autocompleta los campos de título, remitente, número SIR y prioridad del formulario de creación de ticket.
+
+D. SEGURIDAD Y CONTROL DE ACCESO
+* Acceso Restringido: El acceso a las pantallas principales está bloqueado hasta que el usuario se autentique.
+* Cifrado Seguro: El frontend realiza el hash de contraseñas de los usuarios utilizando criptografía nativa SHA-256 (crypto.subtle.digest) antes de enviar y validar las credenciales contra la base de datos.
+* Persistencia de Sesión: Guarda el estado del usuario en sessionStorage para mantener la sesión activa entre recargas de página.
+
+E. CAPACIDADES PWA (PROGRESSIVE WEB APP)
+* Soporte Offline: Equipado con manifest.json y un Service Worker (sw.js).
+* Estrategia de Caché Avanzada: Emplea una estrategia Stale-While-Revalidate para activos estáticos (HTML, CSS, JS e imágenes).
+* Resiliencia de Red: Si la aplicación pierde la conexión a internet, intercepta las llamadas fallidas a la base de datos de Supabase y responde con un formato JSON amigable que indica "Modo Offline", garantizando que la aplicación no sufra un fallo catastrófico.
+
+F. DISEÑO Y EXPERIENCIA DE USUARIO
+* Tema Oscuro y Claro Dinámico: Conmutador rápido mediante un botón que aplica variables CSS personalizadas y persiste la elección en el localStorage del navegador.
+* Estética Senior de Alta Gama: Diseñado con tipografía moderna (Google Fonts Inter), microanimaciones de transición en hover de tarjetas, sombras fluidas, y badges de estado coloridos (verde, naranja y rojo) para facilitar la lectura del analista SOC.
+
+------------------------------------------------------------------------
+4. ARQUITECTURA TÉCNICA Y TECNOLOGÍAS (¿CÓMO LO HACE?)
+------------------------------------------------------------------------
+
+FLUJO DE DATOS GENERAL:
+=======================
+1. Outlook/Office 365 (Emails SOC)
+       │
+       ├─► [Backend auth.js MSAL] ──► Genera token.json
+       │
+       ▼
+2. [Vercel Cron: api/sync.js] ──► Consulta Microsoft Graph ──► Descarga .msg
+       │
+       ├─► Guarda los archivos en Supabase Storage (Bucket: tickets-msg)
+       ├─► Inserta registro en la tabla 'tickets_emails' (Evita duplicados)
+       │
+       ▼
+3. [Dashboard index.html / kanban.html]
+       ├─► El operador presiona "Sincronizar Bucket" o sube/arrastra un .msg localmente.
+       ├─► El frontend (tickets.js/kanban.js) descarga/lee el archivo .msg binario.
+       ├─► Pársea el contenido en el cliente usando MSGReader.js (Título, SIR, Remitente, etc.).
+       ├─► Crea el ticket oficial en la tabla 'tickets' de Supabase.
+       │
+       ▼
+4. [Gestión y Auditoría]
+       ├─► El analista interactúa o mueve tarjetas en el tablero Kanban.
+       ├─► El estado del ticket se actualiza en la tabla 'tickets'.
+       └─► Se escribe el log de movimiento de forma transparente en la tabla 'activity_logs'.
+
+STACK TECNOLÓGICO UTILIZADO:
+============================
+1. Frontend Core: HTML5 Semántico, Vanilla Javascript Moderno (ES6+) con estructura modular de clausura (IIFE) para aislamiento de estados.
+2. Apariencia y Diseño: Vanilla CSS3 personalizado con variables de color para soporte dinámico de Light/Dark Mode.
+3. Base de Datos Relacional: Supabase (PostgreSQL) con tablas de tickets, usuarios, adjuntos, bitácoras de auditoría y correos procesados.
+4. Almacenamiento Cloud: Supabase Storage Buckets para guardar correos ('tickets-msg') y archivos adjuntos ('ticket-files').
+5. Autenticación y Hash: Criptografía SHA-256 nativa (Web Crypto API) combinada con Supabase.
+6. Microsoft Office 365 Auth: MSAL Node (@azure/msal-node) mediante flujo Device Code.
+7. Cliente de Correo Backend: Microsoft Graph Client (@microsoft/microsoft-graph-client) e isomorphic-fetch.
+8. Parser de Archivos MSG:
+   * Frontend: MSGReader.js (Lector de archivos binarios Compound File en el cliente).
+   * Backend: @freiraum/msgreader y ole-doc.
+9. Despliegue y Tareas Programadas: Vercel Serverless Functions y Vercel Crons (configurado mediante vercel.json).
+
+------------------------------------------------------------------------
+5. ESTRUCTURA DEL PROYECTO Y DESCRIPCIÓN DE ARCHIVOS
+------------------------------------------------------------------------
+
+A. ARCHIVOS DEL DIRECTORIO RAÍZ (FRONTEND Y CONFIGURACIÓN)
+* index.html: Interfaz del Dashboard de Gestión de Tickets. Contiene la pantalla de Login integrada, contadores estadísticos de tickets, filtros interactivos avanzados y la tabla principal de incidentes.
+* tickets.js: Cerebro del Dashboard. Implementa la lógica de autenticación SHA-256, peticiones a la API de Supabase, filtros avanzados de búsqueda, exportación de reportes a CSV, el gestor de subida de archivos adjuntos y el cargador y parser local de correos .msg.
+* tickets.css: Estilos CSS del Dashboard. Implementa la paleta de colores moderna del SOC, efectos visuales de hover, diseño de modales responsivos y variables dinámicas para el Dark Mode.
+* kanban.html: Interfaz visual del tablero Kanban. Define las cuatro columnas (Planeado, En Proceso, Realizado, Reportado).
+* kanban.js: Lógica del Kanban. Coordina el arrastre de tarjetas (Drag-and-Drop), actualiza el estatus del ticket en Supabase, registra bitácoras en la tabla activity_logs y gestiona el lector .msg integrado.
+* styleKanban.css: Estilos visuales del Kanban, optimizando las animaciones de arrastre de tarjetas, sombras y temas oscuros.
+* MSGReader.js: Lector binario para analizar archivos .msg en formato OLE Compound File en el navegador de manera cliente-side.
+* sw.js: Service Worker para la PWA. Almacena en caché los archivos estáticos y asegura el manejo controlado del modo Offline.
+* manifest.json: Metadatos de instalación para móviles y escritorio (PWA).
+* timer.html: Panel SOC de monitoreo simplificado que se auto-refresca cada 5 segundos obteniendo los incidentes directamente del buzón de correo mediante /api/tickets.
+* vercel.json: Configura la tarea programada (cron) que llama al endpoint /api/sync cada 5 minutos.
+
+B. DIRECTORIO DEL SERVIDOR BACKEND (Backend/)
+* Backend/package.json: Configura el backend y detalla las dependencias necesarias de Azure, MSAL, Graph, Supabase y Express.
+* Backend/auth.js: Script de consola que inicia el flujo de autenticación de Microsoft Device Code para generar el token.json.
+* Backend/tokenManager.js: Utilidad modular para leer y proveer el token de acceso vigente guardado en token.json.
+* Backend/check-mails.js: Script en Node.js que escanea correos de Outlook y los sube clasificados a Supabase.
+* Backend/ticketClassifier.js: Motor de backend para evaluar la pertinencia y severidad de un correo sospechoso.
+* Backend/supabaseClient.js: Cliente Supabase para el backend usando Service Role Key.
+* Backend/api/sync.js: Endpoint serverless /api/sync que descarga correos en lotes y los sube al bucket 'tickets-msg' en Supabase.
+* Backend/api/tickets.js: Endpoint /api/tickets que lee los correos de Graph API en tiempo real para el monitor SOC (timer.html).
+* Backend/api/status.js: Endpoint de monitoreo para verificar el estado de la conexión de Microsoft Graph.
